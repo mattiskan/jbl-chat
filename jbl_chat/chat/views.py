@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods
 
 from . import models
 
+
 @require_http_methods(["GET"])
 def index(request):
     return JsonResponse({"msg": "Tjena världen, från Mattis"})
@@ -15,24 +16,27 @@ def index(request):
 @require_http_methods(["GET"])
 def get_users(request):
     users = list(models.User.objects.values())
-    
+
     return JsonResponse(users, safe=False)
+
 
 @require_http_methods(["GET"])
 def list_conversations(request):
     current_user, error = _user_from_session(request)
     if error:
         return error
-    
-    conversations = [x.conversation_id for x in models.UserConversation.objects.filter(user_id=current_user)]
+
+    conversations = [x.conversation_id for x in models.UserConversation.objects.filter(
+        user_id=current_user)]
     return JsonResponse(list(conversations), safe=False)
+
 
 @require_http_methods(["GET"])
 def get_conversation(request, conversation_id):
     current_user, error = _user_from_session(request)
     if error:
         return error
-    
+
     participants = [
         uc.user_id
         for uc
@@ -42,20 +46,20 @@ def get_conversation(request, conversation_id):
     if not current_user.id in participants:
         return HttpResponseForbidden()
 
-    messages = models.Message.objects.filter(conversation=conversation_id).values()
-    
+    messages = models.Message.objects.filter(
+        conversation=conversation_id).values()
+
     return JsonResponse({
         'participants': list(participants),
         'messages': list(messages),
     })
 
 
-
 @require_http_methods(["POST"])
 def create_conversation(request):
     # TODO: use single transaction to ensure atomicity?
-    
-    params = json.loads(request.body) # todo: try/catch & validate
+
+    params = json.loads(request.body)  # todo: try/catch & validate
 
     current_user, error = _user_from_session(request)
     if error:
@@ -79,13 +83,13 @@ def create_conversation(request):
         message_text=params['text'],
     )
     message.save()
-    
+
     return JsonResponse({'message_id': message.id, 'conversation_id': convo.id})
 
 
 @require_http_methods(["POST"])
 def post_reply(request, conversation_id):
-    params = json.loads(request.body) # todo: try/catch & validate
+    params = json.loads(request.body)  # todo: try/catch & validate
 
     current_user, error = _user_from_session(request)
     if error:
@@ -107,7 +111,7 @@ def post_reply(request, conversation_id):
         message_text=params['text'],
     )
     message.save()
-    
+
     return JsonResponse({'message_id': message.id, 'conversation_id': conversation.id})
 
 
@@ -117,11 +121,11 @@ def _user_from_session(request):
     if not session_token:
         return None, HttpResponseForbidden('Invalid session')
 
-
     # TODO: Introduce session tokens and look up user for session
     # for now I'm just passing the user-id I want
 
-    users = models.User.objects.filter(pk=session_token) # todo -- look up from session
+    users = models.User.objects.filter(
+        pk=session_token)  # todo -- look up from session
     if not users:
         return None, HttpResponseForbidden('Invalid session')
 

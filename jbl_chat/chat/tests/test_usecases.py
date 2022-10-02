@@ -30,7 +30,7 @@ class ChatViewTest(TestCase):
         more clarity for devs what specifically is breaking rather than just "something is wrong"
         and also to provide an abstraction between tested code's intefrace and the test itself.
         """
-        
+
         # Premise: No preexisting conversations
         response = self.client.get('/conversation', HTTP_SESSION_TOKEN='1')
         self.assertEqual(response.status_code, 200)
@@ -50,10 +50,11 @@ class ChatViewTest(TestCase):
         response = self.client.get('/conversation', HTTP_SESSION_TOKEN='1')
         self.assertEqual(response.status_code, 200)
 
-        conversation_id, = response.json() # exactly length one or fail
+        conversation_id, = response.json()  # exactly length one or fail
 
-        response = self.client.get(f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='1')
-        self.assertEqual(response.status_code, 200)        
+        response = self.client.get(
+            f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='1')
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {
             "participants": [1, 2],
             "messages": [
@@ -68,17 +69,18 @@ class ChatViewTest(TestCase):
         })
 
         # Assertion: User 2 can also see the conversation
-        response = self.client.get(f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='2')
+        response = self.client.get(
+            f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='2')
         self.assertEqual(response.status_code, 200)
 
         # Assertion: Non-participant user cannot see and cannot access the conversation in question
         response = self.client.get('/conversation', HTTP_SESSION_TOKEN='3')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 0)
-        
-        response = self.client.get(f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='3')
-        self.assertEqual(response.status_code, 403)
 
+        response = self.client.get(
+            f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='3')
+        self.assertEqual(response.status_code, 403)
 
         # Action: Second user replies to existing conversation
 
@@ -96,7 +98,8 @@ class ChatViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(conversation_id in response.json())
 
-        response = self.client.get(f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='2')
+        response = self.client.get(
+            f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='2')
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(response.json(), {
@@ -115,12 +118,12 @@ class ChatViewTest(TestCase):
                     "message_text": "Hello test! This is world!",
                     "sender_id": 2,
                     "sent_at": '2022-10-02T15:00:00Z',
-                },                
+                },
             ],
         })
 
     # TODO: Test the "usual suspects" like bad params, users that don't exist, etc.
-        
+
 
 @contextmanager
 def mock_message_sent_at(ts):
