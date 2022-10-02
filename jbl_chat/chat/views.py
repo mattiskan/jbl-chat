@@ -125,7 +125,7 @@ def _user_from_session(request):
     # for now I'm just passing the user-id I want
 
     users = models.User.objects.filter(
-        pk=session_token)  # todo -- look up from session
+        pk=session_token)  # todo -- look up from a sessions table
     if not users:
         return None, HttpResponseForbidden('Invalid session')
 

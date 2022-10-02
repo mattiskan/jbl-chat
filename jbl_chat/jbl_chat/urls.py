@@ -17,5 +17,5 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-    path('', include('chat.urls'), name='index'), # root path
+    path('', include('chat.urls'), name='index'),
 ]
