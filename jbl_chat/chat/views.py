@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 
-from .models import Message
+from . import models
 
 
 def index(request):
@@ -13,12 +13,6 @@ user = {
     'name': 'Ben'
 }
 
-message = {
-    'id': 123,
-    'sent_time': '2020-03-20T14:28:23.382748',
-    'text': 'Hi there, how are you?'
-}
-
 
 def get_users(request):
     return JsonResponse({
@@ -26,7 +20,7 @@ def get_users(request):
     })
 
 def get_conversation(request):
-    messages = list(Message.objects.values())
+    messages = list(models.Message.objects.values())
     
     return JsonResponse({
         'recipient': user,
@@ -34,4 +28,16 @@ def get_conversation(request):
     })
 
 def post_message(request):
-    return JsonResponse({})
+    user = models.User()
+    user.save()
+
+    convo = models.Conversation()
+    convo.save()
+
+    userConvo = models.UserConversation(user=user, conversation=convo)
+    userConvo.save()
+
+    message = models.Message(conversation=convo, sender=user, message_text="hello world")
+    message.save()
+    
+    return JsonResponse({'id': message.id})
