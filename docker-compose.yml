@@ -8,3 +8,9 @@ services:
       - .:/code
     ports:
       - "8000:8000"
+
+  test:
+    build: .
+    command: python jbl_chat/manage.py test chat
+    volumes:
+      - .:/code
