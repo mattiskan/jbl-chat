@@ -7,25 +7,15 @@ from . import models
 def index(request):
     return JsonResponse("Tjena världen, från Mattis")
 
-
-user = {
-    'id': 3,
-    'name': 'Ben'
-}
-
-
 def get_users(request):
-    return JsonResponse({
-        'users': [user] * 3,
-    })
+    users = list(models.User.objects.values())
+    
+    return JsonResponse(users, safe=False)
 
 def get_conversation(request):
     messages = list(models.Message.objects.values())
     
-    return JsonResponse({
-        'recipient': user,
-        'conversation': messages,
-    })
+    return JsonResponse(messages, safe=False)
 
 def post_message(request):
     user = models.User()
