@@ -28,7 +28,7 @@ class Message(models.Model):
     conversation = models.ForeignKey(
         Conversation, on_delete=models.CASCADE, db_constraint=DB_CONSTRAINTS)
     sender = models.ForeignKey(
-        User, on_delete=models.CASCADE, db_constraint=False)
+        User, on_delete=models.CASCADE, db_constraint=DB_CONSTRAINTS)
 
     message_text = models.TextField()
 
