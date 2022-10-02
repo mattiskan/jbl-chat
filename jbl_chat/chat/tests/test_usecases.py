@@ -20,6 +20,17 @@ class ChatViewTest(TestCase):
         self.assertEqual(len(response.json()), self.number_of_users)
 
     def test_create_and_reply_to_conversation(self):
+        """ Tests the main use-case:
+            * Test that a user can create a new conversation
+            * Tests that another user can reply to the conversation
+            * Tests that other users can't see a conversation they are not invited to.
+
+        If there would be active development and/or many authors working on this I would consider
+        breaking it into separate tests with individual setups (via helper functions) to provide
+        more clarity for devs what specifically is breaking rather than just "something is wrong"
+        and also to provide an abstraction between tested code's intefrace and the test itself.
+        """
+        
         # Premise: No preexisting conversations
         response = self.client.get('/conversation', HTTP_SESSION_TOKEN='1')
         self.assertEqual(response.status_code, 200)
@@ -107,6 +118,8 @@ class ChatViewTest(TestCase):
                 },                
             ],
         })
+
+    # TODO: Test the "usual suspects" like bad params, users that don't exist, etc.
         
 
 @contextmanager
