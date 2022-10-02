@@ -1,7 +1,7 @@
 import json
 
 from django.shortcuts import render
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.views.decorators.http import require_http_methods
 
 
@@ -50,9 +50,9 @@ def get_conversation(request, conversation_id):
     })
 
 
-@require_http_methods(["POST"])
-def post_message(request):
 
+@require_http_methods(["POST"])
+def create_conversation(request):
     # todo: try/catch
     params = json.loads(request.body)
 
@@ -66,11 +66,11 @@ def post_message(request):
     sender = models.UserConversation(user=current_user, conversation=convo)
     sender.save()
 
-    recipient = models.UserConversation(
-        user=models.User.objects.filter(pk=params['recipient'])[0],
-        conversation=convo,
-    )
-    recipient.save()
+    for recipient in params['recipients']:
+        models.UserConversation(
+            user=models.User.objects.filter(pk=recipient)[0],
+            conversation=convo,
+        ).save()
 
     message = models.Message(
         conversation=convo,
@@ -79,8 +79,35 @@ def post_message(request):
     )
     message.save()
     
-    return JsonResponse({'id': message.id})
+    return JsonResponse({'message_id': message.id, 'conversation_id': convo.id})
 
+
+@require_http_methods(["POST"])
+def post_reply(request, conversation_id):
+    params = json.loads(request.body)
+
+    current_user, error = _user_from_session(request)
+    if error:
+        return error
+
+    conversation, = models.Conversation.objects.filter(pk=conversation_id)
+
+    participants = [
+        uc.user_id
+        for uc
+        in models.UserConversation.objects.filter(conversation=conversation)
+    ]
+    if not current_user.id in participants:
+        return HttpResponseForbidden()
+
+    message = models.Message(
+        conversation=conversation,
+        sender=current_user,
+        message_text=params['text'],
+    )
+    message.save()
+    
+    return JsonResponse({'message_id': message.id, 'conversation_id': conversation.id})
 
 
 def _user_from_session(request):

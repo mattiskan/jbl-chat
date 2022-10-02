@@ -19,20 +19,17 @@ class ChatViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), self.number_of_users)
 
-    # NOTE: I would probably recommend separating this test into parts with
-    # individual setups and not running them in a long sequence
     def test_create_new_message_thread(self):
         # Premise: No preexisting conversations
         response = self.client.get('/conversation', HTTP_SESSION_TOKEN='1')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 0)
 
-
         # Action: Send a message to create a conversation
-        with mock_message_sent_at():
+        with mock_message_sent_at('2022-10-02T14:58:39.569Z'):
             response = self.client.post(
-                '/message',
-                {'text': 'hello world, this is test', 'recipient': 2},
+                '/conversation/create',
+                {'text': 'hello world, this is test', 'recipients': [2]},
                 content_type="application/json",
                 HTTP_SESSION_TOKEN='1'
             )
@@ -42,9 +39,9 @@ class ChatViewTest(TestCase):
         response = self.client.get('/conversation', HTTP_SESSION_TOKEN='1')
         self.assertEqual(response.status_code, 200)
 
-        convo, = response.json() # exactly length one or fail
+        conversation_id, = response.json() # exactly length one or fail
 
-        response = self.client.get(f'/conversation/{convo}', HTTP_SESSION_TOKEN='1')
+        response = self.client.get(f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='1')
         self.assertEqual(response.status_code, 200)        
         self.assertEqual(response.json(), {
             "participants": [1, 2],
@@ -54,13 +51,13 @@ class ChatViewTest(TestCase):
                     "conversation_id": 1,
                     "message_text": "hello world, this is test",
                     "sender_id": 1,
-                    "sent_at": '2022-10-02T14:58:39.569Z',                    
+                    "sent_at": '2022-10-02T14:58:39.569Z',
                 },
             ],
         })
 
         # Assertion: User 2 can also see the conversation
-        response = self.client.get(f'/conversation/{convo}', HTTP_SESSION_TOKEN='2')
+        response = self.client.get(f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='2')
         self.assertEqual(response.status_code, 200)
 
         # Assertion: Non-participant user cannot see and cannot access the conversation in question
@@ -68,15 +65,53 @@ class ChatViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 0)
         
-        response = self.client.get(f'/conversation/{convo}', HTTP_SESSION_TOKEN='3')
+        response = self.client.get(f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='3')
         self.assertEqual(response.status_code, 403)
+
+
+        # Action: Second user replies to existing conversation
+
+        with mock_message_sent_at('2022-10-02T15:00:00.000Z'):
+            response = self.client.post(
+                f'/conversation/{conversation_id}/reply',
+                {'text': 'Hello test! This is world!'},
+                content_type="application/json",
+                HTTP_SESSION_TOKEN='2'
+            )
+        self.assertEqual(response.status_code, 200)
+
+        # Assetion: Expect conversation id to be consistent and to have response
+        response = self.client.get('/conversation', HTTP_SESSION_TOKEN='2')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(conversation_id in response.json())
+
+        response = self.client.get(f'/conversation/{conversation_id}', HTTP_SESSION_TOKEN='2')
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.json(), {
+            "participants": [1, 2],
+            "messages": [
+                {
+                    "id": 1,
+                    "conversation_id": conversation_id,
+                    "message_text": "hello world, this is test",
+                    "sender_id": 1,
+                    "sent_at": '2022-10-02T14:58:39.569Z',
+                },
+                {
+                    "id": 2,
+                    "conversation_id": conversation_id,
+                    "message_text": "Hello test! This is world!",
+                    "sender_id": 2,
+                    "sent_at": '2022-10-02T15:00:00Z',
+                },                
+            ],
+        })
         
 
-
-
 @contextmanager
-def mock_message_sent_at():
+def mock_message_sent_at(ts):
     field = models.Message._meta.get_field('sent_at')
-    mock_now = '2022-10-02T14:58:39.569Z'
+    mock_now = ts
     with mock.patch.object(field, 'default', new=mock_now):
         yield
