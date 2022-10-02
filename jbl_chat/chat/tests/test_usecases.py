@@ -19,7 +19,7 @@ class ChatViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), self.number_of_users)
 
-    def test_create_new_message_thread(self):
+    def test_create_and_reply_to_conversation(self):
         # Premise: No preexisting conversations
         response = self.client.get('/conversation', HTTP_SESSION_TOKEN='1')
         self.assertEqual(response.status_code, 200)
