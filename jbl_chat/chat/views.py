@@ -53,8 +53,9 @@ def get_conversation(request, conversation_id):
 
 @require_http_methods(["POST"])
 def create_conversation(request):
-    # todo: try/catch
-    params = json.loads(request.body)
+    # TODO: use single transaction to ensure atomicity?
+    
+    params = json.loads(request.body) # todo: try/catch & validate
 
     current_user, error = _user_from_session(request)
     if error:
@@ -84,7 +85,7 @@ def create_conversation(request):
 
 @require_http_methods(["POST"])
 def post_reply(request, conversation_id):
-    params = json.loads(request.body)
+    params = json.loads(request.body) # todo: try/catch & validate
 
     current_user, error = _user_from_session(request)
     if error:
