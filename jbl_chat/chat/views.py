@@ -9,7 +9,7 @@ from . import models
 
 @require_http_methods(["GET"])
 def index(request):
-    return JsonResponse("Tjena världen, från Mattis")
+    return JsonResponse({"msg": "Tjena världen, från Mattis"})
 
 
 @require_http_methods(["GET"])
