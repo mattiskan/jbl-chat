@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 
+from .models import Message
+
 
 def index(request):
     return JsonResponse("Tjena världen, från Mattis")
-
 
 
 user = {
@@ -25,9 +26,11 @@ def get_users(request):
     })
 
 def get_conversation(request):
+    messages = list(Message.objects.values())
+    
     return JsonResponse({
         'recipient': user,
-        'conversation': [message] * 3,
+        'conversation': messages,
     })
 
 def post_message(request):
