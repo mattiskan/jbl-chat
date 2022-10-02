@@ -30,7 +30,13 @@ class Message(models.Model):
     # Should this be set in the client and passed along for a better user experience?
     sent_at = models.DateTimeField(default=now, blank=True)
     
-class UserConversation(models.Model):
+class UserConversation(models.Model):  
     """ Joins users with the conversations they are participating in. """
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, db_constraint=DB_CONSTRAINTS)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'conversation',]),
+            models.Index(fields=['conversation', 'user',]),
+        ]
