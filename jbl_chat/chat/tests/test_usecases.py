@@ -19,6 +19,8 @@ class ChatViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), self.number_of_users)
 
+    # NOTE: I would probably recommend separating this test into parts with
+    # individual setups and not running them in a long sequence
     def test_create_new_message_thread(self):
         # Premise: No preexisting conversations
         response = self.client.get('/conversation', HTTP_SESSION_TOKEN='1')
@@ -56,6 +58,19 @@ class ChatViewTest(TestCase):
                 },
             ],
         })
+
+        # Assertion: User 2 can also see the conversation
+        response = self.client.get(f'/conversation/{convo}', HTTP_SESSION_TOKEN='2')
+        self.assertEqual(response.status_code, 200)
+
+        # Assertion: Non-participant user cannot see and cannot access the conversation in question
+        response = self.client.get('/conversation', HTTP_SESSION_TOKEN='3')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()), 0)
+        
+        response = self.client.get(f'/conversation/{convo}', HTTP_SESSION_TOKEN='3')
+        self.assertEqual(response.status_code, 403)
+        
 
 
 

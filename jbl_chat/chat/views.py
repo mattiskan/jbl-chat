@@ -29,13 +29,20 @@ def list_conversations(request):
 
 @require_http_methods(["GET"])
 def get_conversation(request, conversation_id):
-    messages = models.Message.objects.filter(conversation=conversation_id).values()
-
+    current_user, error = _user_from_session(request)
+    if error:
+        return error
+    
     participants = [
         uc.user_id
         for uc
         in models.UserConversation.objects.filter(conversation_id=conversation_id)
     ]
+
+    if not current_user.id in participants:
+        return HttpResponseForbidden()
+
+    messages = models.Message.objects.filter(conversation=conversation_id).values()
     
     return JsonResponse({
         'participants': list(participants),
