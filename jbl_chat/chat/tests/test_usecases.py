@@ -29,7 +29,7 @@ class ChatViewTest(TestCase):
         with mock_message_sent_at('2022-10-02T14:58:39.569Z'):
             response = self.client.post(
                 '/conversation/create',
-                {'text': 'hello world, this is test', 'recipients': [2]},
+                {'text': 'hello world, this is test', 'participants': [2]},
                 content_type="application/json",
                 HTTP_SESSION_TOKEN='1'
             )

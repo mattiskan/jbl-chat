@@ -66,7 +66,7 @@ def create_conversation(request):
     sender = models.UserConversation(user=current_user, conversation=convo)
     sender.save()
 
-    for recipient in params['recipients']:
+    for recipient in params['participants']:
         models.UserConversation(
             user=models.User.objects.filter(pk=recipient)[0],
             conversation=convo,
